@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#070a11">
+  <meta name="description" content="S16 英雄联盟全球总决赛瑞士轮抽签模拟器：复现种子池、同赛区规避与逐轮配对，枚举 154 种合法首轮签，并模拟整届赛会。">
+  <title>S16 瑞士轮 LAB · 全球总决赛抽签模拟器</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="sharp-ui">
+  <div class="bg-glow bg-glow-a" aria-hidden="true"></div>
+  <div class="bg-glow bg-glow-b" aria-hidden="true"></div>
+  <div class="bg-grid" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <a class="brand" href="#" data-action="go-draw" aria-label="回到抽签台">
+      <span class="brand-mark">S<span>16</span></span>
+      <span class="brand-copy"><strong>SWISS LAB</strong><small>WORLDS 2026</small></span>
+    </a>
+
+    <nav class="main-tabs" role="tablist" aria-label="页面切换">
+      <button class="tab is-active" role="tab" aria-selected="true" data-action="tab" data-tab="draw">
+        <span class="tab-num">01</span><span>抽签台</span>
+      </button>
+      <button class="tab" role="tab" aria-selected="false" data-action="tab" data-tab="lab">
+        <span class="tab-num">02</span><span>概率实验室</span>
+      </button>
+      <button class="tab" role="tab" aria-selected="false" data-action="tab" data-tab="rules">
+        <span class="tab-num">03</span><span>赛制与数据</span>
+      </button>
+    </nav>
+
+    <div class="top-actions">
+      <span class="autosave" id="autosave"><i></i>自动保存</span>
+      <button class="icon-btn" type="button" data-action="undo" id="undoBtn" title="撤销上一步" aria-label="撤销上一步">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7 4 12l5 5M4 12h9a6 6 0 0 1 6 6"/></svg>
+      </button>
+      <button class="ghost-btn small reset-btn" type="button" data-action="reset" aria-label="重置赛程" title="重置赛程">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4v6h6M20 20v-6h-6"/><path d="M5.6 15A7.5 7.5 0 0 0 20 12M18.4 9A7.5 7.5 0 0 0 4 12"/></svg>
+        <span>重置赛程</span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <!-- ============================ DRAW ============================ -->
+    <section class="view is-active" id="view-draw" role="tabpanel" aria-label="抽签台">
+      <section class="tool-head">
+        <div class="tool-head-copy">
+          <div class="eyebrow"><span class="pulse-dot"></span>2026 WORLD CHAMPIONSHIP · SWISS STAGE</div>
+          <h1>瑞士轮抽签模拟器</h1>
+          <p>S16 全球总决赛 · 16 支战队 · 5 轮瑞士轮 · 3 胜晋级。点击队伍即可判定或改判胜者，也可以手动排签。</p>
+        </div>
+        <div class="tool-facts">
+          <div><strong id="heroR1Count">154</strong><span>种合法首轮签</span></div>
+          <div><strong>33</strong><span>场比赛</span></div>
+          <div><strong>8</strong><span>个八强席位</span></div>
+        </div>
+      </section>
+
+      <section class="status-strip" aria-label="赛程状态">
+        <div class="progress-block">
+          <div class="progress-head">
+            <span id="statusRound">第一轮 · 种子池抽签</span>
+            <span class="progress-phase" id="statusPhase">官方首轮签已载入</span>
+          </div>
+          <div class="progress-track"><i id="progressFill" style="width:4%"></i></div>
+        </div>
+        <div class="status-metrics">
+          <div><span>已晋级</span><strong id="metricQualified">0</strong></div>
+          <div><span>已淘汰</span><strong id="metricEliminated">0</strong></div>
+          <div><span>已赛</span><strong id="metricPlayed">0</strong></div>
+        </div>
+        <div class="status-actions">
+          <button class="primary-btn small" type="button" data-action="sim-rest">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor" stroke="none"/></svg>
+            模拟剩余赛程
+          </button>
+        </div>
+      </section>
+
+      <div class="draw-grid">
+        <div class="center-col">
+          <section class="panel round-strip">
+            <div class="round-strip-label">
+              <span class="panel-kicker">SCHEDULE</span>
+              <span class="tiny-pill" id="roundNavPill">R1 / 5</span>
+            </div>
+            <div id="roundList" class="round-list"></div>
+            <button class="ko-nav" type="button" data-action="scroll-ko" id="koNavBtn">
+              <span class="ko-nav-icon">8</span>
+              <span><strong>淘汰赛</strong><small>八强 · BO5</small></span>
+              <span class="ko-nav-state" id="koNavState">未开始</span>
+            </button>
+          </section>
+
+          <section class="panel round-panel" id="roundPanel" aria-live="polite"></section>
+          <section class="panel knockout-panel" id="knockoutPanel"></section>
+
+          <details class="panel standings-panel" id="standingsPanel">
+            <summary>
+              <span class="summary-title">实时战绩</span>
+              <span class="tiny-pill" id="standingsNote">16 队</span>
+              <span class="summary-hint">查看</span>
+            </summary>
+            <div id="standingsList" class="standings-list"></div>
+          </details>
+        </div>
+
+        <aside class="rail right-rail">
+          <section class="panel console-panel" id="consolePanel"></section>
+          <section class="panel odds-panel" id="oddsPanel"></section>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ============================ LAB ============================ -->
+    <section class="view" id="view-lab" role="tabpanel" aria-label="概率实验室">
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow"><span class="pulse-dot"></span>MONTE CARLO · EXACT DRAW ODDS</div>
+          <h2>概率实验室</h2>
+          <p>先穷举每一种合法抽签，再让赛果按实力值滚动一万次。这里同时回答两个问题：签会怎么抽？世界线会怎么走？</p>
+        </div>
+        <div class="section-heading-actions">
+          <button class="ghost-btn" type="button" data-action="browse-r1">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+            浏览全部 154 种首轮签
+          </button>
+        </div>
+      </div>
+
+      <section class="panel lab-controls">
+        <div class="control-group">
+          <span class="control-label">模拟次数</span>
+          <div class="segmented" id="runsSegmented" role="group" aria-label="模拟次数">
+            <button type="button" data-action="lab-runs" data-runs="5000">5K</button>
+            <button type="button" data-action="lab-runs" data-runs="20000" class="is-active">20K</button>
+            <button type="button" data-action="lab-runs" data-runs="50000">50K</button>
+            <button type="button" data-action="lab-runs" data-runs="100000">100K</button>
+          </div>
+        </div>
+        <div class="control-group">
+          <span class="control-label">模拟起点</span>
+          <div class="segmented" id="scopeSegmented" role="group" aria-label="模拟起点">
+            <button type="button" data-action="lab-scope" data-scope="current" class="is-active">当前进度</button>
+            <button type="button" data-action="lab-scope" data-scope="official">官方首轮签</button>
+            <button type="button" data-action="lab-scope" data-scope="reroll">每轮重抽</button>
+          </div>
+        </div>
+        <div class="control-group control-grow">
+          <span class="control-label">实力值预设</span>
+          <div class="segmented" id="presetSegmented" role="group" aria-label="实力值预设">
+            <button type="button" data-action="preset" data-preset="default" class="is-active">默认</button>
+            <button type="button" data-action="preset" data-preset="even">全员五五开</button>
+            <button type="button" data-action="preset" data-preset="lck">LCK 强势</button>
+            <button type="button" data-action="preset" data-preset="lpl">LPL 强势</button>
+          </div>
+        </div>
+        <button class="primary-btn" type="button" data-action="run-lab" id="runLabBtn">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor" stroke="none"/></svg>
+          运行模拟
+        </button>
+      </section>
+
+      <div class="lab-progress" id="labProgress" hidden>
+        <span class="spinner" aria-hidden="true"></span>
+        <span id="labProgressText">正在推演世界线…</span>
+      </div>
+
+      <div class="lab-meta" id="labMeta"></div>
+
+      <div class="lab-stat-grid" id="labStatGrid"></div>
+
+      <div class="lab-two-col">
+        <section class="panel lab-chart-panel">
+          <div class="panel-head-inline">
+            <div>
+              <div class="panel-kicker">ADVANCEMENT PROBABILITY</div>
+              <h3>八强概率</h3>
+            </div>
+            <div class="legend">
+              <span><i class="legend-dot gold"></i>八强</span>
+              <span><i class="legend-dot teal"></i>夺冠</span>
+            </div>
+          </div>
+          <div id="labChart" class="bar-chart"></div>
+        </section>
+
+        <section class="panel lab-region-panel">
+          <div class="panel-head-inline">
+            <div>
+              <div class="panel-kicker">BY REGION</div>
+              <h3>赛区版图</h3>
+            </div>
+          </div>
+          <div id="labRegions" class="region-list"></div>
+        </section>
+      </div>
+
+      <section class="panel lab-table-panel">
+        <div class="panel-head-inline">
+          <div>
+            <div class="panel-kicker">FULL TABLE</div>
+            <h3>十六队世界线</h3>
+          </div>
+          <span class="tiny-pill">按八强概率排序</span>
+        </div>
+        <div class="table-scroll">
+          <table class="prob-table" id="labTable">
+            <thead>
+              <tr>
+                <th>#</th><th>队伍</th><th>八强</th><th>四强</th><th>决赛</th><th>冠军</th><th>3-0</th><th>平均胜场</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <div class="lab-two-col">
+        <section class="panel" id="labR1Panel"></section>
+        <section class="panel" id="labComboPanel"></section>
+      </div>
+
+      <section class="panel" id="labCurrentPanel"></section>
+    </section>
+
+    <!-- ============================ RULES ============================ -->
+    <section class="view" id="view-rules" role="tabpanel" aria-label="赛制与数据">
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow"><span class="pulse-dot"></span>FORMAT · POOLS · DATA</div>
+          <h2>赛制与数据</h2>
+          <p>所有模拟都建立在下面这套 2026 全球总决赛瑞士轮规则上。实力值可以改，规则不能。</p>
+        </div>
+      </div>
+
+      <section class="panel rules-hero">
+        <div class="rule-grid">
+          <article class="rule-card">
+            <span class="rule-num">01</span>
+            <h4>三轮定生死</h4>
+            <p>16 队打 5 轮。先到 3 胜晋级八强，先到 3 负淘汰。最终固定产生 2 支 3-0、3 支 3-1、3 支 3-2。</p>
+          </article>
+          <article class="rule-card">
+            <span class="rule-num">02</span>
+            <h4>首轮看种子池</h4>
+            <p>1 号池对 4 号池，2 号池对 3 号池，同赛区规避。总共只有 154 种合法首轮签。</p>
+          </article>
+          <article class="rule-card">
+            <span class="rule-num">03</span>
+            <h4>之后只看战绩</h4>
+            <p>第二轮起，同战绩队伍随机配对；不再规避同赛区，但不能重复交手。签表按所有合法配对等概率生成。</p>
+          </article>
+          <article class="rule-card">
+            <span class="rule-num">04</span>
+            <h4>关键战升级 BO3</h4>
+            <p>涉及晋级或淘汰的比赛为 BO3，其余为 BO1。第五轮 2-2 组三场全是 BO3，赢家进八强。</p>
+          </article>
+        </div>
+      </section>
+
+      <div class="rules-two-col">
+        <section class="panel">
+          <div class="panel-head-inline">
+            <div><div class="panel-kicker">SEEDED POOLS</div><h3>首轮种子池</h3></div>
+            <span class="tiny-pill">1v4 · 2v3</span>
+          </div>
+          <div id="poolsGrid" class="pools-grid"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head-inline">
+            <div><div class="panel-kicker">OFFICIAL DRAW</div><h3>官方首轮对阵</h3></div>
+            <span class="tiny-pill">2026-10-19</span>
+          </div>
+          <div id="actualDrawList" class="actual-draw-list"></div>
+        </section>
+      </div>
+
+      <section class="panel">
+        <div class="panel-head-inline">
+          <div>
+            <div class="panel-kicker">STRENGTH MODEL</div>
+            <h3>实力值</h3>
+          </div>
+          <div class="head-actions">
+            <span class="tiny-pill">Elo · 400 分制</span>
+            <button class="ghost-btn small" type="button" data-action="reset-ratings">恢复默认</button>
+          </div>
+        </div>
+        <p class="panel-note">实力值只影响比赛结果，不影响抽签。拖动滑块可以自定义你的世界线；BO1 / BO3 / BO5 的系列赛胜率由单局 Elo 概率换算。</p>
+        <div id="ratingsGrid" class="ratings-grid"></div>
+      </section>
+
+      <section class="panel sources-panel">
+        <div class="panel-head-inline">
+          <div><div class="panel-kicker">SOURCES & NOTES</div><h3>数据与说明</h3></div>
+          <button class="ghost-btn small" type="button" data-action="export-game">导出当前赛程 JSON</button>
+        </div>
+        <div class="sources-grid">
+          <div>
+            <h4>规则依据</h4>
+            <ul>
+              <li>16 队瑞士轮、3 胜晋级 / 3 败淘汰、首轮四池与同赛区规避。</li>
+              <li>第二轮起同战绩配对、允许同赛区、不允许重赛；晋级/淘汰战为 BO3。</li>
+              <li>八强：两支 3-0 队伍分别对阵 3-2 队伍，其余四队随机配对，八强起 BO5。</li>
+            </ul>
+          </div>
+          <div>
+            <h4>建模假设</h4>
+            <ul>
+              <li>每一种合法配对视为等概率；若官方现场采用重抽流程，个别对位概率可能有细微差异。</li>
+              <li>比赛结果使用 Elo 模型独立模拟，不包含版本、选手状态、BP、蓝色方等额外因素。</li>
+              <li>实力值为演示数据，可随时调整；本工具不是官方预测。</li>
+            </ul>
+          </div>
+          <div>
+            <h4>参考链接</h4>
+            <ul class="source-links">
+              <li><a href="https://lolesports.com/en-US/tournament/115660540725177488/overview" target="_blank" rel="noopener noreferrer">LoL Esports · Worlds 2026</a></li>
+              <li><a href="https://www.18183.com/gonglue/202610/4jocq6ao.html" target="_blank" rel="noopener noreferrer">S16 瑞士轮晋级规则</a></li>
+              <li><a href="https://www.18183.com/gonglue/202610/qteo17ag.html" target="_blank" rel="noopener noreferrer">S16 八强抽签规则</a></li>
+              <li><a href="https://stars.scoregg.com/p/1469071" target="_blank" rel="noopener noreferrer">首轮种子池与抽签规则</a></li>
+            </ul>
+          </div>
+        </div>
+        <p class="disclaimer">非官方粉丝工具 · 数据截至 2026-10-19 · 队伍名称与赛制版权归 Riot Games 及各俱乐部所有。</p>
+      </section>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>S16 SWISS LAB</span>
+    <span>154 draws · 33 matches · 8 tickets · 1 champion</span>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <div class="modal-backdrop" id="modalBackdrop" hidden>
+    <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"></div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
