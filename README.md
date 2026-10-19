@@ -2,6 +2,12 @@
 
 面向 **2026 英雄联盟全球总决赛（S16）瑞士轮** 的抽签与赛果模拟网站。纯静态 HTML / CSS / JavaScript，无构建步骤、无外部依赖。
 
+## 在线地址
+
+**https://massju.github.io/s16-swiss-lab/**
+
+GitHub 仓库：https://github.com/Massju/s16-swiss-lab
+
 打开 `index.html` 即可使用；也可以直接双击单文件版 **`s16-swiss-lab.html`**（CSS / JS / 图标全部内联，便于单独分享）。
 
 在当前目录启动静态服务器：
