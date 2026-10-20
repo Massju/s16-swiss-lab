@@ -2524,3 +2524,26 @@ body { background: var(--bg); }
   font-size: 10px;
 }
 .more-actions summary:hover { background: transparent !important; color: var(--muted) !important; }
+
+/* Worlds trophy brand mark */
+.brand-mark {
+  width: 48px !important;
+  height: 48px !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+.brand-mark::after { display: none !important; }
+.brand-mark svg {
+  width: 46px;
+  height: 46px;
+  display: block;
+  overflow: visible;
+  filter: drop-shadow(0 0 14px rgba(200, 170, 110, .28));
+}
+@media (max-width: 900px) {
+  .brand-mark { width: 42px !important; height: 42px !important; }
+  .brand-mark svg { width: 40px; height: 40px; }
+}
