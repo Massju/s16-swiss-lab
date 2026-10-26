@@ -14,9 +14,9 @@
   var SCHEDULE = Data.SCHEDULE;
   var IDS = E.IDS;
 
-  var STORAGE_GAME = "s16.swiss.game.v2";
+  var STORAGE_GAME = "s16.swiss.game.v3";
   var STORAGE_RATINGS = "s16.swiss.ratings.v5";
-  var STORAGE_HISTORY = "s16.swiss.history.v2";
+  var STORAGE_HISTORY = "s16.swiss.history.v3";
 
   var $ = function (sel, root) { return (root || document).querySelector(sel); };
   var $$ = function (sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); };
@@ -40,7 +40,7 @@
         if (parsed && Array.isArray(parsed.matches)) return E.normalizeState(parsed);
       } catch (e) { /* fall through */ }
     }
-    return E.createInitialState();
+    return E.createCurrentState();
   }
 
   function loadRatings() {
@@ -73,11 +73,12 @@
   var game = loadGame();
   var ratings = loadRatings();
   var history = loadHistory();
+  var initialPending = E.pendingMatches(game);
 
   var ui = {
     view: "draw",
     round: Math.min(E.countCompletedRounds(game) + 1, 5),
-    oddsTeam: "GEN",
+    oddsTeam: initialPending.length ? initialPending[0].a : "GEN",
     labTeam: "GEN",
     lab: null,
     labRuns: 20000,
@@ -588,6 +589,7 @@
           (played === 0 ? '<button type="button" class="ghost-btn danger" data-action="redraw-round">重新随机抽取本轮</button>' : "") +
           (r === 1 && played === 0 && !isOfficial ? '<button type="button" class="ghost-btn" data-action="official-round">恢复官方首轮签</button>' : "") +
           '<button type="button" class="ghost-btn" data-action="select-round" data-round="' + Math.min(r, 5) + '">定位到本轮对阵</button>' +
+          (E.countCompletedRounds(game) > 0 ? '<button type="button" class="ghost-btn" data-action="restart-fresh">从第一轮重开</button>' : "") +
         "</details>" +
         '<div class="console-divider"></div>' +
         '<div class="info-list">' +
@@ -1028,11 +1030,13 @@
     renderAll();
   }
 
-  function resetAll(keepRatings) {
+  function resetAll(keepRatings, fresh) {
     pushHistory();
-    game = E.createInitialState();
-    ui.round = 1;
-    ui.animateRound = 1;
+    game = fresh ? E.createInitialState() : E.createCurrentState();
+    ui.round = Math.min(E.countCompletedRounds(game) + 1, 5);
+    var nextPending = E.pendingMatches(game);
+    ui.oddsTeam = nextPending.length ? nextPending[0].a : "GEN";
+    ui.animateRound = ui.round;
     ui.lab = null;
     ui.labStale = true;
     if (!keepRatings) {
@@ -1044,7 +1048,7 @@
     saveGame();
     renderAll();
     window.setTimeout(function () { ui.animateRound = null; }, 1300);
-    toast("已重置为官方首轮签", "success");
+    toast(fresh ? "已回到官方首轮签" : "已回到当前赛况", "success");
   }
 
   /* ------------------------------------------------------------------ */
@@ -1102,7 +1106,7 @@
 
   function doSimRest() {
     if (E.countCompletedRounds(game) >= 5 && game.knockout.champion) {
-      confirmAction("重开一届？", "当前这届赛会的冠军是 " + game.knockout.champion + "。重开会回到官方首轮签，并清除当前所有赛果。", "重开一届", function () { resetAll(true); });
+      confirmAction("重开一届？", "当前这届赛会的冠军是 " + game.knockout.champion + "。重开会回到官方首轮签，并清除当前所有赛果。", "重开一届", function () { resetAll(true, true); });
       return;
     }
     pushHistory();
@@ -1757,7 +1761,10 @@
       $("#knockoutPanel").scrollIntoView({ behavior: "smooth", block: "start" });
     }
     else if (action === "reset") {
-      confirmAction("重置整届赛会？", "当前赛程、手动判定的赛果与淘汰赛签表都会被清除，回到官方首轮签。实力值设置会保留。", "重置赛程", function () { resetAll(true); });
+      confirmAction("重置赛程？", "当前赛程、手动判定的赛果与淘汰赛签表都会被清除，回到截至目前的真实赛况。实力值设置会保留。", "重置赛程", function () { resetAll(true); });
+    }
+    else if (action === "restart-fresh") {
+      confirmAction("从第一轮重开？", "当前真实赛果会被清除，回到官方首轮签；之后可以重新抽取、手动排签或模拟整届赛会。", "从第一轮重开", function () { resetAll(true, true); });
     }
     else if (action === "undo") {
       if (!history.length) { toast("没有可撤销的操作", "warn"); return; }

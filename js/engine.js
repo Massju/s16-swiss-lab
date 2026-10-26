@@ -108,6 +108,32 @@
     };
   }
 
+  function createCurrentState() {
+    var rounds = [Data.ACTUAL_R1 || [], Data.ACTUAL_R2 || [], Data.ACTUAL_R3 || []];
+    var matches = [];
+    rounds.forEach(function (pairs, ri) {
+      var round = ri + 1;
+      pairs.forEach(function (p, i) {
+        var extra = { official: true };
+        if (p.winner) {
+          extra.winner = p.winner;
+          extra.scoreA = p.scoreA;
+          extra.scoreB = p.scoreB;
+        }
+        matches.push(makeMatch("R" + round + "M" + (i + 1), round, p.groupKey, p.bo || 1, p.a, p.b, extra));
+      });
+    });
+    var state = {
+      version: 2,
+      completedRounds: 0,
+      matches: matches,
+      knockout: { drawn: false, matches: [], champion: null },
+      createdAt: Date.now()
+    };
+    state.completedRounds = countCompletedRounds(state);
+    return state;
+  }
+
   function createEmptyState() {
     return {
       version: 2,
@@ -1503,6 +1529,7 @@
     fmtInt: fmtInt,
 
     createInitialState: createInitialState,
+    createCurrentState: createCurrentState,
     createEmptyState: createEmptyState,
     cloneState: cloneState,
     normalizeState: normalizeState,

@@ -1,4 +1,4 @@
-/* S16 Worlds Swiss — static data (as of 2026-10-19) */
+/* S16 Worlds Swiss — static data (as of 2026-10-26) */
 (function (root, factory) {
   var data = factory();
   if (typeof module === "object" && module.exports) module.exports = data;
@@ -30,14 +30,36 @@
   ];
 
   var ACTUAL_R1 = [
-    { a: "GEN",  b: "IG",   groupKey: "P1-P4" },
-    { a: "AL",   b: "KC",   groupKey: "P1-P4" },
-    { a: "TLAW", b: "CFO",  groupKey: "P1-P4" },
-    { a: "G2",   b: "DK",   groupKey: "P1-P4" },
-    { a: "HLE",  b: "TES",  groupKey: "P2-P3" },
-    { a: "BLG",  b: "MKOI", groupKey: "P2-P3" },
-    { a: "TSW",  b: "LYON", groupKey: "P2-P3" },
-    { a: "LOS",  b: "T1",   groupKey: "P2-P3" }
+    { a: "GEN",  b: "IG",   groupKey: "P1-P4", winner: "GEN",  scoreA: 1, scoreB: 0 },
+    { a: "AL",   b: "KC",   groupKey: "P1-P4", winner: "KC",   scoreA: 0, scoreB: 1 },
+    { a: "TLAW", b: "CFO",  groupKey: "P1-P4", winner: "CFO",  scoreA: 0, scoreB: 1 },
+    { a: "G2",   b: "DK",   groupKey: "P1-P4", winner: "DK",   scoreA: 0, scoreB: 1 },
+    { a: "HLE",  b: "TES",  groupKey: "P2-P3", winner: "HLE",  scoreA: 1, scoreB: 0 },
+    { a: "BLG",  b: "MKOI", groupKey: "P2-P3", winner: "MKOI", scoreA: 0, scoreB: 1 },
+    { a: "TSW",  b: "LYON", groupKey: "P2-P3", winner: "LYON", scoreA: 0, scoreB: 1 },
+    { a: "LOS",  b: "T1",   groupKey: "P2-P3", winner: "T1",   scoreA: 0, scoreB: 1 }
+  ];
+
+  var ACTUAL_R2 = [
+    { a: "HLE",  b: "GEN",  groupKey: "1-0", bo: 1, winner: "GEN",  scoreA: 0, scoreB: 1 },
+    { a: "MKOI", b: "CFO",  groupKey: "1-0", bo: 1, winner: "MKOI", scoreA: 1, scoreB: 0 },
+    { a: "DK",   b: "T1",   groupKey: "1-0", bo: 1, winner: "DK",   scoreA: 1, scoreB: 0 },
+    { a: "KC",   b: "LYON", groupKey: "1-0", bo: 1, winner: "LYON", scoreA: 0, scoreB: 1 },
+    { a: "TES",  b: "AL",   groupKey: "0-1", bo: 1, winner: "TES",  scoreA: 1, scoreB: 0 },
+    { a: "LOS",  b: "G2",   groupKey: "0-1", bo: 1, winner: "G2",   scoreA: 0, scoreB: 1 },
+    { a: "TSW",  b: "IG",   groupKey: "0-1", bo: 1, winner: "IG",   scoreA: 0, scoreB: 1 },
+    { a: "TLAW", b: "BLG",  groupKey: "0-1", bo: 1, winner: "BLG",  scoreA: 0, scoreB: 1 }
+  ];
+
+  var ACTUAL_R3 = [
+    { a: "MKOI", b: "DK",   groupKey: "2-0", bo: 3, winner: "DK",   scoreA: 0, scoreB: 2 },
+    { a: "LYON", b: "GEN",  groupKey: "2-0", bo: 3, winner: "GEN",  scoreA: 1, scoreB: 2 },
+    { a: "IG",   b: "HLE",  groupKey: "1-1", bo: 1, winner: "IG",   scoreA: 1, scoreB: 0 },
+    { a: "TES",  b: "G2",   groupKey: "1-1", bo: 1, winner: "TES",  scoreA: 1, scoreB: 0 },
+    { a: "CFO",  b: "T1",   groupKey: "1-1", bo: 1, winner: null,   scoreA: null, scoreB: null },
+    { a: "BLG",  b: "KC",   groupKey: "1-1", bo: 1, winner: null,   scoreA: null, scoreB: null },
+    { a: "LOS",  b: "TSW",  groupKey: "0-2", bo: 3, winner: null,   scoreA: null, scoreB: null },
+    { a: "TLAW", b: "AL",   groupKey: "0-2", bo: 3, winner: null,   scoreA: null, scoreB: null }
   ];
 
   var POOLS = {
@@ -63,10 +85,10 @@
   };
 
   var SCHEDULE = {
-    1: { date: "10.24 – 10.25", label: "第一轮", sub: "种子池抽签 · 8 场 BO1" },
-    2: { date: "10.25 – 10.27", label: "第二轮", sub: "1-0 / 0-1 · 8 场 BO1" },
-    3: { date: "10.27 – 10.29", label: "第三轮", sub: "2-0 / 1-1 / 0-2 · 8 场" },
-    4: { date: "10.29 – 10.31", label: "第四轮", sub: "2-1 / 1-2 · 6 场 BO3" },
+    1: { date: "10.24",        label: "第一轮", sub: "种子池抽签 · 8 场 BO1" },
+    2: { date: "10.25 – 10.26", label: "第二轮", sub: "1-0 / 0-1 · 8 场 BO1" },
+    3: { date: "10.26 – 10.27", label: "第三轮", sub: "2-0 / 1-1 / 0-2 · 4 BO1 + 4 BO3" },
+    4: { date: "10.29 – 10.30", label: "第四轮", sub: "2-1 / 1-2 · 6 场 BO3" },
     5: { date: "11.01",        label: "第五轮", sub: "2-2 决胜 · 3 场 BO3" }
   };
 
@@ -80,6 +102,8 @@
   return {
     TEAMS: TEAMS,
     ACTUAL_R1: ACTUAL_R1,
+    ACTUAL_R2: ACTUAL_R2,
+    ACTUAL_R3: ACTUAL_R3,
     POOLS: POOLS,
     REGIONS: REGIONS,
     RATINGS: RATINGS,
