@@ -108,8 +108,24 @@
     };
   }
 
+  function officialKnockout() {
+    var list = Data.ACTUAL_KNOCKOUT || [];
+    if (!list.length) return { drawn: false, matches: [], champion: null };
+    var matches = list.map(function (p) {
+      var m = makeKnockoutMatch(p.id || (p.stage + (p.slot || 1)), p.stage, p.slot || 1, p.a, p.b, p.note || "");
+      m.official = true;
+      if (p.winner) {
+        m.winner = p.winner;
+        m.scoreA = p.scoreA;
+        m.scoreB = p.scoreB;
+      }
+      return m;
+    });
+    return { drawn: true, matches: matches, champion: null, official: true };
+  }
+
   function createCurrentState() {
-    var rounds = [Data.ACTUAL_R1 || [], Data.ACTUAL_R2 || [], Data.ACTUAL_R3 || []];
+    var rounds = [Data.ACTUAL_R1 || [], Data.ACTUAL_R2 || [], Data.ACTUAL_R3 || [], Data.ACTUAL_R4 || [], Data.ACTUAL_R5 || []];
     var matches = [];
     rounds.forEach(function (pairs, ri) {
       var round = ri + 1;
@@ -127,9 +143,10 @@
       version: 2,
       completedRounds: 0,
       matches: matches,
-      knockout: { drawn: false, matches: [], champion: null },
+      knockout: officialKnockout(),
       createdAt: Date.now()
     };
+    ensureKnockoutStructure(state);
     state.completedRounds = countCompletedRounds(state);
     return state;
   }
@@ -217,19 +234,23 @@
         return;
       }
       var loser = m.winner === m.a ? m.b : m.a;
+      var winScore = m.winner === m.a ? m.scoreA : m.scoreB;
+      var loseScore = m.winner === m.a ? m.scoreB : m.scoreA;
       rec[m.winner].w++;
       rec[loser].l++;
-      rec[m.winner].scoreFor += m.scoreA || 0;
-      rec[loser].scoreFor += m.scoreB || 0;
+      rec[m.winner].scoreFor += winScore || 0;
+      rec[m.winner].scoreAgainst += loseScore || 0;
+      rec[loser].scoreFor += loseScore || 0;
+      rec[loser].scoreAgainst += winScore || 0;
       if (rec[m.winner].opponents.indexOf(loser) === -1) rec[m.winner].opponents.push(loser);
       if (rec[loser].opponents.indexOf(m.winner) === -1) rec[loser].opponents.push(m.winner);
       rec[m.winner].path.push({
         round: m.round, opp: loser, result: "W", bo: m.bo,
-        scoreFor: m.scoreA, scoreAgainst: m.scoreB, matchId: m.id, stage: m.stage
+        scoreFor: winScore, scoreAgainst: loseScore, matchId: m.id, stage: m.stage
       });
       rec[loser].path.push({
         round: m.round, opp: m.winner, result: "L", bo: m.bo,
-        scoreFor: m.scoreB, scoreAgainst: m.scoreA, matchId: m.id, stage: m.stage
+        scoreFor: loseScore, scoreAgainst: winScore, matchId: m.id, stage: m.stage
       });
     });
     return rec;
@@ -1039,24 +1060,33 @@
     return state.knockout;
   }
 
+  function knockoutSlot(matches, stage, slot) {
+    for (var i = 0; i < matches.length; i++) {
+      if (matches[i].stage === stage && matches[i].slot === slot) return matches[i];
+    }
+    return null;
+  }
+
   function ensureKnockoutStructure(state) {
     var ko = state.knockout;
     if (!ko || !ko.drawn) return;
-    var qf = ko.matches.filter(function (m) { return m.stage === "QF"; });
-    var sf = ko.matches.filter(function (m) { return m.stage === "SF"; });
-    var fin = ko.matches.filter(function (m) { return m.stage === "F"; });
-    if (qf.length === 4 && qf.every(function (m) { return m.winner; }) && sf.length === 0) {
-      ko.matches.push(makeKnockoutMatch("SF1", "SF", 1, qf[0].winner, qf[1].winner, "上半区"));
-      ko.matches.push(makeKnockoutMatch("SF2", "SF", 2, qf[2].winner, qf[3].winner, "下半区"));
-      sf = ko.matches.filter(function (m) { return m.stage === "SF"; });
+    var halves = [
+      { slot: 1, note: "上半区", a: knockoutSlot(ko.matches, "QF", 1), b: knockoutSlot(ko.matches, "QF", 2) },
+      { slot: 2, note: "下半区", a: knockoutSlot(ko.matches, "QF", 3), b: knockoutSlot(ko.matches, "QF", 4) }
+    ];
+    halves.forEach(function (h) {
+      if (!h.a || !h.b || !h.a.winner || !h.b.winner) return;
+      if (knockoutSlot(ko.matches, "SF", h.slot)) return;
+      ko.matches.push(makeKnockoutMatch("SF" + h.slot, "SF", h.slot, h.a.winner, h.b.winner, h.note));
+    });
+    var sf1 = knockoutSlot(ko.matches, "SF", 1);
+    var sf2 = knockoutSlot(ko.matches, "SF", 2);
+    var fin = knockoutSlot(ko.matches, "F", 1);
+    if (sf1 && sf2 && sf1.winner && sf2.winner && !fin) {
+      ko.matches.push(makeKnockoutMatch("F", "F", 1, sf1.winner, sf2.winner, "总决赛"));
+      fin = knockoutSlot(ko.matches, "F", 1);
     }
-    if (sf.length === 2 && sf.every(function (m) { return m.winner; }) && fin.length === 0) {
-      ko.matches.push(makeKnockoutMatch("F", "F", 1, sf[0].winner, sf[1].winner, "总决赛"));
-      fin = ko.matches.filter(function (m) { return m.stage === "F"; });
-    }
-    if (fin.length === 1 && fin[0].winner) {
-      ko.champion = fin[0].winner;
-    }
+    if (fin && fin.winner) ko.champion = fin.winner;
   }
 
   function setKnockoutWinner(state, matchId, winnerId, opts) {
@@ -1197,8 +1227,35 @@
       opp: opp,
       nextRound: nextRound,
       pending: pending,
-      completed: completed
+      completed: completed,
+      bracket: knockoutBracketData(state, wins)
     };
+  }
+
+  /* Monte Carlo: when the real knockout bracket is already drawn, simulate inside it. */
+  function knockoutBracketData(state, wins) {
+    var ko = state.knockout;
+    if (!ko || !ko.drawn) return null;
+    var qf = [null, null, null, null];
+    var sf = {};
+    var fin = null;
+    ko.matches.forEach(function (m) {
+      if (!m.a || !m.b) return;
+      var entry = {
+        a: IDX[m.a],
+        b: IDX[m.b],
+        winner: m.winner && IDX[m.winner] != null ? IDX[m.winner] : null
+      };
+      if (m.stage === "QF" && m.slot >= 1 && m.slot <= 4) qf[m.slot - 1] = entry;
+      else if (m.stage === "SF" && m.slot) sf[m.slot] = entry;
+      else if (m.stage === "F") fin = entry;
+    });
+    if (qf.some(function (x) { return !x; })) return null;
+    var qualified = {};
+    for (var i = 0; i < 16; i++) if (wins[i] >= 3) qualified[i] = true;
+    var ok = qf.every(function (p) { return qualified[p.a] && qualified[p.b]; });
+    if (!ok) return null;
+    return { qf: qf, sf: sf, f: fin };
   }
 
   function compactActive(wins, losses) {
@@ -1356,6 +1413,22 @@
     return { champion: champion, semi: semi, final: finalists, qf: qfWinners };
   }
 
+  function simulateKnockoutBracket(bracket, probs, rng) {
+    function play(a, b, fixed) {
+      if (fixed && fixed.winner != null && ((fixed.a === a && fixed.b === b) || (fixed.a === b && fixed.b === a))) {
+        return fixed.winner;
+      }
+      return rng() < probs.p5[a][b] ? a : b;
+    }
+    var qfWinners = bracket.qf.map(function (p) { return play(p.a, p.b, p); });
+    var sfWinners = [
+      play(qfWinners[0], qfWinners[1], bracket.sf && bracket.sf[1]),
+      play(qfWinners[2], qfWinners[3], bracket.sf && bracket.sf[2])
+    ];
+    var champion = play(sfWinners[0], sfWinners[1], bracket.f);
+    return { champion: champion, semi: qfWinners.slice(), final: sfWinners.slice(), qf: qfWinners.slice() };
+  }
+
   function simulateOne(base, probs, options, rng) {
     var wins = new Uint8Array(base.wins);
     var losses = new Uint8Array(base.losses);
@@ -1382,7 +1455,9 @@
 
     var qualified = [];
     for (var i = 0; i < 16; i++) if (wins[i] >= 3) qualified.push(i);
-    var ko = simulateKnockoutCompact(qualified, losses, probs, rng);
+    var ko = base.bracket
+      ? simulateKnockoutBracket(base.bracket, probs, rng)
+      : simulateKnockoutCompact(qualified, losses, probs, rng);
     return {
       wins: wins,
       losses: losses,

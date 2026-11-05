@@ -14,9 +14,9 @@
   var SCHEDULE = Data.SCHEDULE;
   var IDS = E.IDS;
 
-  var STORAGE_GAME = "s16.swiss.game.v3";
+  var STORAGE_GAME = "s16.swiss.game.v4";
   var STORAGE_RATINGS = "s16.swiss.ratings.v5";
-  var STORAGE_HISTORY = "s16.swiss.history.v3";
+  var STORAGE_HISTORY = "s16.swiss.history.v4";
 
   var $ = function (sel, root) { return (root || document).querySelector(sel); };
   var $$ = function (sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); };
@@ -769,7 +769,10 @@
       html += '<div class="bracket-scroll"><div class="bracket">' +
         '<div class="bracket-col"><h5>Quarterfinals · BO5</h5>' + qf.map(function (m, i) { return koCardHTML(m, i); }).join("") + "</div>" +
         '<div class="bracket-col"><h5>Semifinals</h5>' +
-          (sf.length ? sf.map(function (m, i) { return koCardHTML(m, i); }).join("") : '<div class="bracket-placeholder">等待八强结果</div><div class="bracket-placeholder">等待八强结果</div>') +
+          (sf.length
+            ? sf.map(function (m, i) { return koCardHTML(m, i); }).join("") +
+              (sf.length < 2 ? '<div class="bracket-placeholder">等待下半区结果</div>' : "")
+            : '<div class="bracket-placeholder">等待八强结果</div><div class="bracket-placeholder">等待八强结果</div>') +
         "</div>" +
         '<div class="bracket-col"><h5>Final</h5>' +
           (fin.length ? fin.map(function (m, i) { return koCardHTML(m, i); }).join("") : '<div class="bracket-placeholder">等待半决赛</div>') +
@@ -807,7 +810,7 @@
     var labMeta = $("#labMeta");
     if (lab) {
       var scopeLabel = ui.labScope === "current" ? "当前进度" : ui.labScope === "official" ? "官方首轮签" : "每轮重抽";
-      labMeta.innerHTML = "<span>模拟 <b>" + fmt(lab.runs) + "</b> 次 · 起点：<b>" + scopeLabel + "</b>" + (lab.base && lab.base.rerollR1 ? " · 首轮随机" : "") + (lab.base && lab.base.completed >= 5 ? " · 瑞士轮已完成，从八强重抽" : "") + "</span>" +
+      labMeta.innerHTML = "<span>模拟 <b>" + fmt(lab.runs) + "</b> 次 · 起点：<b>" + scopeLabel + "</b>" + (lab.base && lab.base.rerollR1 ? " · 首轮随机" : "") + (lab.base && lab.base.completed >= 5 ? " · 八强签表已定，沿用真实对位" : "") + "</span>" +
         "<span>耗时 <b>" + (lab.elapsed || 0) + " ms</b> · 随机种子 <b>" + lab.seed + "</b></span>";
     } else {
       labMeta.innerHTML = "<span>尚未运行模拟。点击「运行模拟」生成整届赛会概率。</span><span>精确抽签概率无需模拟，见下方。</span>";

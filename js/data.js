@@ -1,4 +1,4 @@
-/* S16 Worlds Swiss — static data (as of 2026-10-26) */
+/* S16 Worlds Swiss — static data (as of 2026-11-05) */
 (function (root, factory) {
   var data = factory();
   if (typeof module === "object" && module.exports) module.exports = data;
@@ -53,13 +53,39 @@
 
   var ACTUAL_R3 = [
     { a: "MKOI", b: "DK",   groupKey: "2-0", bo: 3, winner: "DK",   scoreA: 0, scoreB: 2 },
-    { a: "LYON", b: "GEN",  groupKey: "2-0", bo: 3, winner: "GEN",  scoreA: 1, scoreB: 2 },
-    { a: "IG",   b: "HLE",  groupKey: "1-1", bo: 1, winner: "IG",   scoreA: 1, scoreB: 0 },
-    { a: "TES",  b: "G2",   groupKey: "1-1", bo: 1, winner: "TES",  scoreA: 1, scoreB: 0 },
-    { a: "CFO",  b: "T1",   groupKey: "1-1", bo: 1, winner: null,   scoreA: null, scoreB: null },
-    { a: "BLG",  b: "KC",   groupKey: "1-1", bo: 1, winner: null,   scoreA: null, scoreB: null },
-    { a: "LOS",  b: "TSW",  groupKey: "0-2", bo: 3, winner: null,   scoreA: null, scoreB: null },
-    { a: "TLAW", b: "AL",   groupKey: "0-2", bo: 3, winner: null,   scoreA: null, scoreB: null }
+    { a: "GEN",  b: "LYON", groupKey: "2-0", bo: 3, winner: "GEN",  scoreA: 2, scoreB: 1 },
+    { a: "HLE",  b: "IG",   groupKey: "1-1", bo: 1, winner: "IG",   scoreA: 0, scoreB: 1 },
+    { a: "G2",   b: "TES",  groupKey: "1-1", bo: 1, winner: "TES",  scoreA: 0, scoreB: 1 },
+    { a: "CFO",  b: "T1",   groupKey: "1-1", bo: 1, winner: "T1",   scoreA: 0, scoreB: 1 },
+    { a: "BLG",  b: "KC",   groupKey: "1-1", bo: 1, winner: "BLG",  scoreA: 1, scoreB: 0 },
+    { a: "LOS",  b: "TSW",  groupKey: "0-2", bo: 3, winner: "LOS",  scoreA: 2, scoreB: 0 },
+    { a: "TLAW", b: "AL",   groupKey: "0-2", bo: 3, winner: "TLAW", scoreA: 2, scoreB: 0 }
+  ];
+
+  /* Round 4 — 2-1 group (advance) / 1-2 group (elimination), all Bo3 */
+  var ACTUAL_R4 = [
+    { a: "MKOI", b: "T1",   groupKey: "2-1", bo: 3, winner: "T1",   scoreA: 0, scoreB: 2 },
+    { a: "IG",   b: "LYON", groupKey: "2-1", bo: 3, winner: "IG",   scoreA: 2, scoreB: 1 },
+    { a: "TES",  b: "BLG",  groupKey: "2-1", bo: 3, winner: "TES",  scoreA: 2, scoreB: 1 },
+    { a: "KC",   b: "CFO",  groupKey: "1-2", bo: 3, winner: "KC",   scoreA: 2, scoreB: 0 },
+    { a: "TLAW", b: "LOS",  groupKey: "1-2", bo: 3, winner: "LOS",  scoreA: 1, scoreB: 2 },
+    { a: "HLE",  b: "G2",   groupKey: "1-2", bo: 3, winner: "HLE",  scoreA: 2, scoreB: 0 }
+  ];
+
+  /* Round 5 — 2-2 group, all Bo3 */
+  var ACTUAL_R5 = [
+    { a: "KC",   b: "MKOI", groupKey: "2-2", bo: 3, winner: "KC",   scoreA: 2, scoreB: 0 },
+    { a: "BLG",  b: "HLE",  groupKey: "2-2", bo: 3, winner: "BLG",  scoreA: 2, scoreB: 0 },
+    { a: "LYON", b: "LOS",  groupKey: "2-2", bo: 3, winner: "LYON", scoreA: 2, scoreB: 1 }
+  ];
+
+  /* Knockout stage — Bo5, single elimination. QF1+QF2 = upper half, QF3+QF4 = lower half. */
+  var ACTUAL_KNOCKOUT = [
+    { id: "QF1", stage: "QF", slot: 1, a: "TES",  b: "IG",   note: "随机配对",     winner: "IG",  scoreA: 1, scoreB: 3 },
+    { id: "QF2", stage: "QF", slot: 2, a: "GEN",  b: "LYON", note: "3-0 vs 3-2",   winner: "GEN", scoreA: 3, scoreB: 0 },
+    { id: "QF3", stage: "QF", slot: 3, a: "DK",   b: "BLG",  note: "3-0 vs 3-2",   winner: null,  scoreA: null, scoreB: null },
+    { id: "QF4", stage: "QF", slot: 4, a: "T1",   b: "KC",   note: "随机配对",     winner: null,  scoreA: null, scoreB: null },
+    { id: "SF1", stage: "SF", slot: 1, a: "IG",   b: "GEN",  note: "上半区 · 11.08", winner: null, scoreA: null, scoreB: null }
   ];
 
   var POOLS = {
@@ -86,10 +112,11 @@
 
   var SCHEDULE = {
     1: { date: "10.24",        label: "第一轮", sub: "种子池抽签 · 8 场 BO1" },
-    2: { date: "10.25 – 10.26", label: "第二轮", sub: "1-0 / 0-1 · 8 场 BO1" },
+    2: { date: "10.25",        label: "第二轮", sub: "1-0 / 0-1 · 8 场 BO1" },
     3: { date: "10.26 – 10.27", label: "第三轮", sub: "2-0 / 1-1 / 0-2 · 4 BO1 + 4 BO3" },
-    4: { date: "10.29 – 10.30", label: "第四轮", sub: "2-1 / 1-2 · 6 场 BO3" },
-    5: { date: "11.01",        label: "第五轮", sub: "2-2 决胜 · 3 场 BO3" }
+    4: { date: "10.29 – 10.31", label: "第四轮", sub: "2-1 / 1-2 · 6 场 BO3" },
+    5: { date: "11.01",        label: "第五轮", sub: "2-2 决胜 · 3 场 BO3" },
+    6: { date: "11.03 – 11.15", label: "淘汰赛", sub: "八强 / 四强 / 决赛 · BO5" }
   };
 
   var RULES = {
@@ -104,6 +131,9 @@
     ACTUAL_R1: ACTUAL_R1,
     ACTUAL_R2: ACTUAL_R2,
     ACTUAL_R3: ACTUAL_R3,
+    ACTUAL_R4: ACTUAL_R4,
+    ACTUAL_R5: ACTUAL_R5,
+    ACTUAL_KNOCKOUT: ACTUAL_KNOCKOUT,
     POOLS: POOLS,
     REGIONS: REGIONS,
     RATINGS: RATINGS,

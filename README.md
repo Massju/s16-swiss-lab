@@ -25,8 +25,8 @@ python3 -m http.server 4173
 - **官方队伍图标**：16 支队伍均使用 LoL Esports 官方队伍 logo，不带外围图标框；单文件版会把 logo 一并内联。
 - **精确抽签概率**：不做随机模拟，直接穷举当前状态下所有合法签表。首轮固定为 **154 种**（1 号池 vs 4 号池 11 种 × 2 号池 vs 3 号池 14 种），并给出每支队伍的每个潜在对手概率。
 - **全部首轮签表**：在“概率实验室”中浏览 / 导出全部 154 种合法首轮签。
-- **蒙特卡洛全赛会模拟**：可模拟 5K / 20K / 50K / 100K 届赛会，输出八强、四强、决赛、冠军概率，3-0 概率、平均胜场、赛区汇总和常见八强组合。
-- **完整淘汰赛**：瑞士轮结束后可按“3-0 对 3-2、其余随机”随机抽八强，也可以手动排八强；随后模拟或手动完成 BO5 单败淘汰赛。
+- **蒙特卡洛全赛会模拟**：可模拟 5K / 20K / 50K / 100K 届赛会，输出八强、四强、决赛、冠军概率，3-0 概率、平均胜场、赛区汇总和常见八强组合。淘汰赛签表已经产生时，模拟会沿用真实八强对位（已完赛结果视为固定），只在未赛场次上继续推演。
+- **完整淘汰赛**：默认载入真实的八强签表；也可以把八强清空后按“3-0 对 3-2、其余随机”重新抽签，再模拟或手动完成 BO5 单败淘汰赛。
 - **实力值编辑**：默认 Elo 实力值可拖动调整，支持“全员五五开 / LCK 强势 / LPL 强势”预设。
 - **本地保存与撤销**：赛程自动保存在浏览器 localStorage；支持撤销、重置、导出当前赛程 JSON。
 - **改判保护**：改判已结束的比赛会先确认，并清除该轮之后的抽签与赛果；淘汰赛改判同理。
@@ -50,7 +50,7 @@ python3 -m http.server 4173
 - 3 号池：T1、TES、LYON、MKOI
 - 4 号池：DK、IG、CFO、KC（入围赛胜者）
 
-默认载入截至 2026-10-26 的真实赛况：R1、R2 已完赛，R3 已完成 4 场、其余待进行；可以在“更多”里从第一轮重开，回到官方首轮签重新模拟。
+默认载入截至 2026-11-05 的真实赛况：瑞士轮 5 轮共 15 场已全部结束，八强签表已抽定。八强赛中 TES 1-3 IG、GEN 3-0 LYON 已完赛；DK vs BLG（11 月 6 日 06:00）与 T1 vs KC 待进行；上半区半决赛 IG vs GEN 已经确定。可以在“更多”里从第一轮重开，回到官方首轮签重新模拟。
 
 ## 视觉方向
 
@@ -82,6 +82,8 @@ s16-swiss-lab.html   单文件版（推荐分享，logo 已内联）
 ## 数据来源
 
 - [LoL Esports · Worlds 2026](https://lolesports.com/en-US/tournament/115660540725177488/overview)
+- [Liquipedia · Worlds 2026 Swiss Stage](https://liquipedia.net/leagueoflegends/World_Championship/2026/Swiss_Stage)
+- [Liquipedia · Worlds 2026 Knockout Stage](https://liquipedia.net/leagueoflegends/World_Championship/2026/Knockout_Stage)
 - [S16 瑞士轮晋级规则](https://www.18183.com/gonglue/202610/4jocq6ao.html)
 - [S16 八强抽签规则](https://www.18183.com/gonglue/202610/qteo17ag.html)
 - [首轮种子池与抽签规则](https://stars.scoregg.com/p/1469071)
