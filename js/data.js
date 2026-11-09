@@ -1,4 +1,4 @@
-/* S16 Worlds Swiss — static data (as of 2026-11-05) */
+/* S16 Worlds Swiss — static data (as of 2026-11-09) */
 (function (root, factory) {
   var data = factory();
   if (typeof module === "object" && module.exports) module.exports = data;
@@ -83,9 +83,11 @@
   var ACTUAL_KNOCKOUT = [
     { id: "QF1", stage: "QF", slot: 1, a: "TES",  b: "IG",   note: "随机配对",     winner: "IG",  scoreA: 1, scoreB: 3 },
     { id: "QF2", stage: "QF", slot: 2, a: "GEN",  b: "LYON", note: "3-0 vs 3-2",   winner: "GEN", scoreA: 3, scoreB: 0 },
-    { id: "QF3", stage: "QF", slot: 3, a: "DK",   b: "BLG",  note: "3-0 vs 3-2",   winner: null,  scoreA: null, scoreB: null },
-    { id: "QF4", stage: "QF", slot: 4, a: "T1",   b: "KC",   note: "随机配对",     winner: null,  scoreA: null, scoreB: null },
-    { id: "SF1", stage: "SF", slot: 1, a: "IG",   b: "GEN",  note: "上半区 · 11.08", winner: null, scoreA: null, scoreB: null }
+    { id: "QF3", stage: "QF", slot: 3, a: "DK",   b: "BLG",  note: "3-0 vs 3-2",   winner: "BLG", scoreA: 0, scoreB: 3 },
+    { id: "QF4", stage: "QF", slot: 4, a: "T1",   b: "KC",   note: "随机配对",     winner: "T1",  scoreA: 3, scoreB: 1 },
+    { id: "SF1", stage: "SF", slot: 1, a: "IG",   b: "GEN",  note: "上半区 · 11.08", winner: "GEN", scoreA: 0, scoreB: 3 },
+    { id: "SF2", stage: "SF", slot: 2, a: "BLG",  b: "T1",   note: "下半区 · 11.09", winner: "BLG", scoreA: 3, scoreB: 1 },
+    { id: "F",   stage: "F",  slot: 1, a: "BLG",  b: "GEN",  note: "总决赛 · 11.15 03:00", winner: null, scoreA: null, scoreB: null }
   ];
 
   var POOLS = {

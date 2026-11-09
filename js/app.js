@@ -14,9 +14,9 @@
   var SCHEDULE = Data.SCHEDULE;
   var IDS = E.IDS;
 
-  var STORAGE_GAME = "s16.swiss.game.v4";
+  var STORAGE_GAME = "s16.swiss.game.v5";
   var STORAGE_RATINGS = "s16.swiss.ratings.v5";
-  var STORAGE_HISTORY = "s16.swiss.history.v4";
+  var STORAGE_HISTORY = "s16.swiss.history.v5";
 
   var $ = function (sel, root) { return (root || document).querySelector(sel); };
   var $$ = function (sel, root) { return Array.prototype.slice.call((root || document).querySelectorAll(sel)); };
@@ -168,6 +168,12 @@
     return out;
   }
 
+  function finalMatch() {
+    var ms = (game.knockout && game.knockout.matches) || [];
+    for (var i = 0; i < ms.length; i++) if (ms[i].stage === "F") return ms[i];
+    return null;
+  }
+
   function currentRound() { return E.countCompletedRounds(game) + 1; }
 
   function roundIsComplete(r) {
@@ -179,7 +185,11 @@
     var completed = E.countCompletedRounds(game);
     if (completed >= 5) {
       if (game.knockout.champion) return "冠军：" + game.knockout.champion;
-      if (game.knockout.drawn) return "淘汰赛进行中";
+      if (game.knockout.drawn) {
+        var fin = finalMatch();
+        if (fin && fin.a && fin.b) return "总决赛 · " + fin.a + " vs " + fin.b;
+        return "淘汰赛进行中";
+      }
       return "瑞士轮结束 · 八强已定";
     }
     var r = completed + 1;
@@ -239,8 +249,11 @@
     var koPlayed = (game.knockout.matches || []).filter(function (m) { return !!m.winner; }).length;
 
     var label;
-    if (completed >= 5) label = game.knockout.champion ? "赛会结束 · 冠军加冕" : "淘汰赛 · 八强签表";
-    else label = SCHEDULE[completed + 1].label + " · " + SCHEDULE[completed + 1].sub.split(" · ")[0];
+    if (completed >= 5) {
+      if (game.knockout.champion) label = "赛会结束 · 冠军加冕";
+      else if (finalMatch()) label = "淘汰赛 · 总决赛";
+      else label = "淘汰赛 · 八强签表";
+    } else label = SCHEDULE[completed + 1].label + " · " + SCHEDULE[completed + 1].sub.split(" · ")[0];
 
     $("#statusRound").textContent = label;
     $("#statusPhase").textContent = phaseText();
@@ -252,7 +265,7 @@
 
     var progress;
     if (completed >= 5) {
-      progress = game.knockout.champion ? 100 : game.knockout.drawn ? 88 : 80;
+      progress = game.knockout.champion ? 100 : finalMatch() ? 96 : game.knockout.drawn ? 88 : 80;
     } else {
       progress = Math.round((completed / 5) * 80 + (E.isRoundDrawn(game, completed + 1) ? 8 : 0));
     }
@@ -287,12 +300,17 @@
     $("#roundList").innerHTML = html;
 
     var koState = "未开始";
+    var koSub = "八强 · BO5";
     var koReady = false;
     if (completed >= 5) {
       koReady = true;
-      koState = game.knockout.champion ? "已结束" : game.knockout.drawn ? "进行中" : "待抽签";
+      if (game.knockout.champion) koState = "已结束";
+      else if (finalMatch()) { koState = "总决赛"; koSub = "总决赛 · BO5"; }
+      else koState = game.knockout.drawn ? "进行中" : "待抽签";
     }
     $("#koNavState").textContent = koState;
+    var koSubEl = $("#koNavSub");
+    if (koSubEl) koSubEl.textContent = koSub;
     $("#koNavBtn").classList.toggle("is-ready", koReady);
   }
 
@@ -523,17 +541,23 @@
           '<div class="console-note gold">八强起取消同赛区规避。3-0 队伍必定抽到一支 3-2 队伍。</div>';
       } else if (!game.knockout.champion) {
         var pending = game.knockout.matches.filter(function (m) { return !m.winner; }).length;
-        html = '<div class="console-head"><div><div class="panel-kicker">KNOCKOUT</div><h3 class="console-title">淘汰赛进行中</h3><p class="console-sub">八强 BO5，单败淘汰。点击对阵卡中的队伍手动判定胜者。</p></div><div class="console-round">KO</div></div>' +
-          '<div class="info-list">' +
-            '<div class="info-row"><span>待进行</span><strong class="gold">' + pending + " 场</strong></div>" +
-            '<div class="info-row"><span>已晋级四强</span><strong>' + (game.knockout.matches.filter(function (m) { return m.stage === "SF"; }).length ? "已产生" : "待定") + "</strong></div>" +
-          "</div>" +
+        var fin = finalMatch();
+        var finalReady = !!fin && !fin.winner;
+        var infoRows = finalReady
+          ? '<div class="info-row"><span>总决赛</span><strong class="gold">' + esc(fin.a) + " vs " + esc(fin.b) + "</strong></div>" +
+            '<div class="info-row"><span>待进行</span><strong class="gold">' + pending + " 场</strong></div>"
+          : '<div class="info-row"><span>待进行</span><strong class="gold">' + pending + " 场</strong></div>" +
+            '<div class="info-row"><span>已晋级四强</span><strong>' + (game.knockout.matches.filter(function (m) { return m.stage === "SF"; }).length ? "已产生" : "待定") + "</strong></div>";
+        html = '<div class="console-head"><div><div class="panel-kicker">KNOCKOUT</div><h3 class="console-title">' + (finalReady ? "总决赛待赛" : "淘汰赛进行中") + '</h3><p class="console-sub">' +
+          (finalReady ? "总决赛 BO5，单败决胜。点击对阵卡中的队伍即可手动判定冠军。" : "八强 BO5，单败淘汰。点击对阵卡中的队伍手动判定胜者。") +
+          '</p></div><div class="console-round">' + (finalReady ? "🏆" : "KO") + "</div></div>" +
+          '<div class="info-list">' + infoRows + "</div>" +
           '<div class="console-actions" style="margin-top:16px">' +
-            '<button type="button" class="primary-btn wide" data-action="sim-ko">模拟淘汰赛</button>' +
+            '<button type="button" class="primary-btn wide" data-action="sim-ko">' + (finalReady ? "模拟总决赛" : "模拟淘汰赛") + "</button>" +
             (game.knockout.matches.every(function (m) { return !m.winner; }) ? '<button type="button" class="ghost-btn" data-action="manual-ko">手动重排八强</button>' : "") +
             '<button type="button" class="ghost-btn" data-action="sim-rest">模拟全部</button>' +
           "</div>" +
-          '<div class="console-note">3-0 队伍在八强拥有对位 3-2 队伍的保护签。</div>';
+          '<div class="console-note">' + (finalReady ? "总决赛为 BO5；胜者加冕 2026 全球总决赛冠军。" : "3-0 队伍在八强拥有对位 3-2 队伍的保护签。") + "</div>";
       } else {
         html = '<div class="console-head"><div><div class="panel-kicker">CHAMPION</div><h3 class="console-title">赛会结束</h3><p class="console-sub">这一条世界线已经走到终点。</p></div><div class="console-round">🏆</div></div>' +
           '<div style="text-align:center;padding:8px 0 18px">' + teamBadge(game.knockout.champion, "lg") +
@@ -745,9 +769,12 @@
     panel.style.display = "";
     var ko = game.knockout;
     var koUnplayed = ko.drawn && ko.matches.length > 0 && ko.matches.every(function (m) { return !m.winner; });
-    var html = '<div class="knockout-head"><div><div class="panel-kicker">SINGLE ELIMINATION</div><h3>淘汰赛 · 八强签表</h3>' +
+    var finMatch = finalMatch();
+    var koTitle = ko.champion ? "淘汰赛 · 冠军" : finMatch ? "淘汰赛 · 总决赛" : "淘汰赛 · 八强签表";
+    var koPill = ko.champion ? "已结束" : finMatch ? "总决赛" : ko.drawn ? "进行中" : "待抽签";
+    var html = '<div class="knockout-head"><div><div class="panel-kicker">SINGLE ELIMINATION</div><h3>' + koTitle + '</h3>' +
       '<p class="console-sub" style="margin-top:3px">八强起 BO5，单败淘汰；不规避同赛区。</p></div>' +
-      '<div class="ko-head-actions"><span class="tiny-pill">' + (ko.champion ? "已结束" : ko.drawn ? "进行中" : "待抽签") + "</span>" +
+      '<div class="ko-head-actions"><span class="tiny-pill">' + koPill + "</span>" +
       (koUnplayed ? '<button type="button" class="ghost-btn small" data-action="manual-ko">手动重排</button>' : "") +
       "</div></div>" +
       '<div class="knockout-body">';
@@ -810,7 +837,7 @@
     var labMeta = $("#labMeta");
     if (lab) {
       var scopeLabel = ui.labScope === "current" ? "当前进度" : ui.labScope === "official" ? "官方首轮签" : "每轮重抽";
-      labMeta.innerHTML = "<span>模拟 <b>" + fmt(lab.runs) + "</b> 次 · 起点：<b>" + scopeLabel + "</b>" + (lab.base && lab.base.rerollR1 ? " · 首轮随机" : "") + (lab.base && lab.base.completed >= 5 ? " · 八强签表已定，沿用真实对位" : "") + "</span>" +
+      labMeta.innerHTML = "<span>模拟 <b>" + fmt(lab.runs) + "</b> 次 · 起点：<b>" + scopeLabel + "</b>" + (lab.base && lab.base.rerollR1 ? " · 首轮随机" : "") + (lab.base && lab.base.completed >= 5 ? " · 淘汰赛对位已定，保留真实赛果" : "") + "</span>" +
         "<span>耗时 <b>" + (lab.elapsed || 0) + " ms</b> · 随机种子 <b>" + lab.seed + "</b></span>";
     } else {
       labMeta.innerHTML = "<span>尚未运行模拟。点击「运行模拟」生成整届赛会概率。</span><span>精确抽签概率无需模拟，见下方。</span>";
