@@ -106,10 +106,13 @@
     CBLOL: { name: "CBLOL", full: "巴西 CBLOL",   color: "#b9de5a", soft: "rgba(185,222,90,.14)" }
   };
 
+  /* Tournament-form Elo: start 1500, update each of the 39 completed series
+     (K=32, BO1/BO3/BO5 expected series win probability), then shift the mean
+     to 1700 so the scale matches the UI. */
   var RATINGS = {
-    GEN: 1855, HLE: 1785, AL: 1780, BLG: 1840, T1: 1715, TES: 1645,
-    G2: 1755, DK: 1755, KC: 1755, MKOI: 1620, CFO: 1585, TSW: 1760,
-    IG: 1675, LYON: 1695, TLAW: 1730, LOS: 1685
+    GEN: 1775, HLE: 1685, AL: 1650, BLG: 1750, T1: 1730, TES: 1715,
+    G2: 1670, DK: 1730, KC: 1700, MKOI: 1685, CFO: 1670, TSW: 1650,
+    IG: 1735, LYON: 1705, TLAW: 1670, LOS: 1685
   };
 
   var SCHEDULE = {

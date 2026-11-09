@@ -7,7 +7,7 @@
   <meta name="description" content="S16 英雄联盟全球总决赛瑞士轮抽签模拟器：复现种子池、同赛区规避与逐轮配对，枚举 154 种合法首轮签，并模拟整届赛会。">
   <title>S16 瑞士轮 LAB · 全球总决赛抽签模拟器</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="stylesheet" href="styles.css?v=20261109">
+  <link rel="stylesheet" href="styles.css?v=20261109b">
 </head>
 <body class="sharp-ui">
   <div class="bg-glow bg-glow-a" aria-hidden="true"></div>
@@ -313,7 +313,7 @@
             <button class="ghost-btn small" type="button" data-action="reset-ratings">恢复默认</button>
           </div>
         </div>
-        <p class="panel-note">实力值只影响比赛结果，不影响抽签。拖动滑块可以自定义你的世界线；BO1 / BO3 / BO5 的系列赛胜率由单局 Elo 概率换算。</p>
+        <p class="panel-note">实力值只影响比赛结果，不影响抽签。默认值按本届已完赛的 39 场系列赛更新（1500 起点 · K=32 · 平均 1700）。拖动滑块可以自定义你的世界线；BO1 / BO3 / BO5 的系列赛胜率由单局 Elo 概率换算。</p>
         <div id="ratingsGrid" class="ratings-grid"></div>
       </section>
 
@@ -336,7 +336,7 @@
             <ul>
               <li>每一种合法配对视为等概率；若官方现场采用重抽流程，个别对位概率可能有细微差异。</li>
               <li>比赛结果使用 Elo 模型独立模拟，不包含版本、选手状态、BP、蓝色方等额外因素。</li>
-              <li>实力值为演示数据，可随时调整；本工具不是官方预测。</li>
+              <li>默认实力值按本届已完赛结果计算（1500 起点、K=32、平均 1700），仍不是官方预测。</li>
             </ul>
           </div>
           <div>
@@ -364,8 +364,8 @@
     <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"></div>
   </div>
 
-  <script src="js/data.js?v=20261109"></script>
-  <script src="js/engine.js?v=20261109"></script>
-  <script src="js/app.js?v=20261109"></script>
+  <script src="js/data.js?v=20261109b"></script>
+  <script src="js/engine.js?v=20261109b"></script>
+  <script src="js/app.js?v=20261109b"></script>
 </body>
 </html>

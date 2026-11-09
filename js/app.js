@@ -15,7 +15,7 @@
   var IDS = E.IDS;
 
   var STORAGE_GAME = "s16.swiss.game.v5";
-  var STORAGE_RATINGS = "s16.swiss.ratings.v5";
+  var STORAGE_RATINGS = "s16.swiss.ratings.v6";
   var STORAGE_HISTORY = "s16.swiss.history.v5";
 
   var $ = function (sel, root) { return (root || document).querySelector(sel); };
